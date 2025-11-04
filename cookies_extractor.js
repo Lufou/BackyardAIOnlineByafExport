@@ -2,34 +2,34 @@ const fs = require("fs");
 const path = require("path");
 const os = require("os");
 const Database = require("better-sqlite3");
+const util = require("util");
+const { debug } = require("console");
+const exec = util.promisify(require("child_process").exec);
 
 const platform = os.platform();
 
-function getCookiesForDomain(domain, browser = null) {
-  const { exec } = require("child_process");
+async function getCookiesForDomain(domain, browser = null) {
   const { debugLog } = require("./logging.js");
-  if (browser === null) {
-    if (platform === "win32") {
-      exec('reg query "HKEY_CURRENT_USER\\Software\\Microsoft\\Windows\\Shell\\Associations\\UrlAssociations\\http\\UserChoice" /v ProgId', (err, stdout) => {
-        if (err) return console.error(err);
-        const match = stdout.match(/ProgId\s+REG_SZ\s+(.+)/);
-        if (match) {
-          browser = match[1];
-        }
-      });
-    } else if (platform === "darwin") {
-      exec('defaults read com.apple.LaunchServices/com.apple.launchservices.secure LSHandlers -array', (err, stdout) => {
-        if (err) return console.error(err);
-        browser = stdout;
-      });
-    } else {
-      exec('xdg-settings get default-web-browser', (err, stdout) => {
-        if (err) return console.error(err);
-        browser = stdout;
-      });
-    }
-    if (browser) {
-      debugLog(`Detected default browser: ${browser}`);
+  if (!browser) {
+    try {
+      if (platform === "win32") {
+          const { stdout } = await exec(
+            'reg query "HKEY_CURRENT_USER\\Software\\Microsoft\\Windows\\Shell\\Associations\\UrlAssociations\\http\\UserChoice" /v ProgId'
+          );
+
+          const match = stdout.match(/ProgId\s+REG_SZ\s+(.+)/);
+          if (match) browser = match[1];
+      } else if (platform === "darwin") {
+          const { stdout } = await exec(
+            'defaults read com.apple.LaunchServices/com.apple.launchservices.secure LSHandlers -array'
+          );
+          browser = stdout;
+      } else {
+          const { stdout } = await exec('xdg-settings get default-web-browser');
+          browser = stdout;
+      }
+    } catch (err) {
+      console.error(err);
     }
   }
 
@@ -41,16 +41,22 @@ function getCookiesForDomain(domain, browser = null) {
   browser = browser.toLowerCase();
   let cookies = null;
   if (browser.includes("firefox")) {
+    debugLog("Using Firefox cookie extraction");
     cookies = firefoxCookiesProcess(domain);
   } else if (browser.includes("chrome")) {
+    debugLog("Using Chrome cookie extraction");
     cookies = chromeCookiesProcess(domain);
   } else if (browser.includes("edge")) {
+    debugLog("Using Edge (Chrome) cookie extraction");
     cookies = chromeCookiesProcess(domain, getEdgeCookiesPath());
   } else if (browser.includes("brave")) {
+    debugLog("Using Brave (Chrome) cookie extraction");
     cookies = chromeCookiesProcess(domain, getBraveCookiesPath());
   } else if (browser.includes("safari")) {
+    debugLog("Using Safari cookie extraction");
     cookies = safariCookiesProcess(domain);
   } else if (browser.includes("opera")) {
+    debugLog("Using Opera (Chrome) cookie extraction");
     cookies = chromeCookiesProcess(domain);
   } else {
     console.error(`Unsupported browser for cookie extraction: ${browser}`);
