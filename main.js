@@ -1,3 +1,7 @@
+#!/usr/bin/env node
+
+const yargs = require("yargs/yargs");
+const { hideBin } = require("yargs/helpers");
 const fs = require("fs");
 const path = require("path");
 const { createByaArchive } = require("byaf");
@@ -7,9 +11,40 @@ const { downloadImageAsFile, replaceStringSpecial } = require("./utils.js");
 const { Requester } = require("./Requester.js");
 
 const BASE_URL = "https://backyard.ai";
-const OUTPUT_DIR = "./output";
 
-const DEBUG = false;
+const argv = yargs(hideBin(process.argv))
+    .option('debug', {
+        alias: ['d', 'verbose'],
+        type: 'boolean',
+        description: 'Enable debug mode',
+        default: false,
+    })
+    .option('output-dir', {
+        alias: 'o',
+        type: 'string',
+        description: 'Force output directory',
+        default: './output',
+    })
+    .option('exit-on-failure', {
+        alias: 'e',
+        type: 'boolean',
+        description: 'Exit on failure',
+        default: true,
+    })
+    .option('browser', {
+        alias: 'b',
+        type: 'string',
+        description: 'Specify the browser to extract cookies from (chrome, firefox, edge, brave, safari, opera)',
+        default: null,
+    })
+    .help()
+    .argv;
+
+const OUTPUT_DIR = argv['output-dir'];
+const DEBUG = argv.debug;
+const EXIT_ON_FAILURE = argv['exit-on-failure'];
+
+module.exports = { DEBUG };
 
 (async () => {
     const cookies = getCookiesForDomain("backyard.ai");
