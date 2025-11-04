@@ -7,6 +7,7 @@ const platform = os.platform();
 
 function getCookiesForDomain(domain, browser = null) {
   const { exec } = require("child_process");
+  const { debugLog } = require("./logging.js");
   if (browser === null) {
     if (platform === "win32") {
       exec('reg query "HKEY_CURRENT_USER\\Software\\Microsoft\\Windows\\Shell\\Associations\\UrlAssociations\\http\\UserChoice" /v ProgId', (err, stdout) => {
@@ -27,6 +28,14 @@ function getCookiesForDomain(domain, browser = null) {
         browser = stdout;
       });
     }
+    if (browser) {
+      debugLog(`Detected default browser: ${browser}`);
+    }
+  }
+
+  if (!browser) {
+    console.warn("Could not determine default browser. Please specify the browser manually.");
+    return null;
   }
 
   browser = browser.toLowerCase();

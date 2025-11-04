@@ -47,7 +47,7 @@ const EXIT_ON_FAILURE = argv['exit-on-failure'];
 module.exports = { DEBUG };
 
 (async () => {
-    const cookies = getCookiesForDomain("backyard.ai");
+    const cookies = getCookiesForDomain("backyard.ai", argv.browser);
     if (!cookies) {
         return;
     }
