@@ -1,0 +1,6 @@
+- option to enable debug
+- option to force output dir
+- option to exit or not on failure (--exit-on-failure or -e)
+- Multi browser support
+- Force browser arg
+- Add export messages argument

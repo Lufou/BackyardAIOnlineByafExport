@@ -1,0 +1,24 @@
+{
+  "name": "backyardaionlinebyafexport",
+  "version": "1.0.0",
+  "description": "This tool allows you to export your online characters from Backyard.ai (BYAF extension)",
+  "homepage": "https://github.com/Lufou/BackyardAIOnlineByafExport#readme",
+  "bugs": {
+    "url": "https://github.com/Lufou/BackyardAIOnlineByafExport/issues"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/Lufou/BackyardAIOnlineByafExport.git"
+  },
+  "license": "Creative Commons Attribution-NonCommercial 4.0 International (CC BY-NC 4.0)",
+  "author": "Lufou",
+  "type": "commonjs",
+  "main": "main.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "dependencies": {
+    "better-sqlite3": "^11.10.0",
+    "byaf": "^0.1.0"
+  }
+}
