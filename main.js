@@ -99,8 +99,10 @@ module.exports = { DEBUG };
         const requestScenarios = await requester.makeRequest(`/api/trpc/app.groupConfig.getScenarios?batch=1&input={"0":{"json":{"groupConfigId":"${char.id}"}}}`);
 
         if (!requestScenarios) {
-            // TODO: Exit on failure or not
-            return;
+            if (EXIT_ON_FAILURE) {
+                return;
+            }
+            continue;
         }
 
         const scenarios = requestScenarios.scenarios;
@@ -115,8 +117,10 @@ module.exports = { DEBUG };
             const requestChat = await requester.makeRequest(`/api/trpc/app.groupConfig.getByChatId?batch=1&input={"0":{"json":{"chatId":"${scenarioId}"}}}`);
 
             if (!requestChat) {
-                // TODO: Exit on failure or not
-                return;
+                if (EXIT_ON_FAILURE) {
+                    return;
+                }
+                continue;
             }
 
             const chatInfo = requestChat.frontendGroupConfig;
