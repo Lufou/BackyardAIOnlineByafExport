@@ -51,7 +51,7 @@ module.exports = { DEBUG };
     if (!cookies) {
         return;
     }
-    debugLog(`Cookies found: ${cookies.length}`, DEBUG);
+    debugLog(`Cookies found: ${cookies.length}`);
     let all_fetched = false;
     let cursor = 0;
     const requester = new Requester(BASE_URL, cookies);
@@ -89,7 +89,7 @@ module.exports = { DEBUG };
         }
     }
 
-    debugLog(`${preloadCharacters.length} characters found.`, DEBUG);
+    debugLog(`${preloadCharacters.length} characters found.`);
 
     if (!fs.existsSync(OUTPUT_DIR)) fs.mkdirSync(OUTPUT_DIR);
     
@@ -108,7 +108,7 @@ module.exports = { DEBUG };
         let definitiveScenarios = [];
 
         for (const scenario of scenarios) {
-            debugLog(`Treating scenario ${scenario.id}`, DEBUG);
+            debugLog(`Treating scenario ${scenario.id}`);
 
             const scenarioId = scenario.id;
 
@@ -179,8 +179,8 @@ module.exports = { DEBUG };
         }
         const outputPath = path.join(OUTPUT_DIR, `${char.id}.byaf`);
 
-        debugLog(`character data: ${JSON.stringify(char)}`, DEBUG);
-        debugLog(`scenario data: ${JSON.stringify(definitiveScenarios)}`, DEBUG);
+        debugLog(`character data: ${JSON.stringify(char)}`);
+        debugLog(`scenario data: ${JSON.stringify(definitiveScenarios)}`);
         const result = await createByaArchive(
             {
                 outputPath,

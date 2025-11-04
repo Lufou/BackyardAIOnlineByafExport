@@ -1,5 +1,6 @@
-function debugLog(message, condition) {
-    if (condition) {
+function debugLog(message) {
+    const { DEBUG } = require("./main.js");
+    if (DEBUG) {
         console.log(message);
     }
 }
