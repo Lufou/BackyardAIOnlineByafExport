@@ -22,7 +22,9 @@ I currently don’t plan to support this feature, but you are still welcome to o
 
 # How to run it ?
 
-Very easy, just go to the folder you've cloned the repo into and execute the command `node .`
+Very easy:
+- First, make sure to be logged in on Backyard.ai in your web browser
+- Then, just go to the folder you've cloned the repo into and execute the command `node .`
 <br>
 
 ## FAQ
