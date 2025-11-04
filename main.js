@@ -25,7 +25,7 @@ const DEBUG = false;
     while (!all_fetched) {
         const response = await requester.makeRequest(`/api/trpc/app.groupConfig.getAll?batch=1&input={"0":{"json":{"folderUrl":null,"cursor":${cursor},"direction":"forward"}}}`);
 
-        if (!request) {
+        if (!response) {
             return;
         }
         
