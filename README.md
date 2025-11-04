@@ -33,10 +33,8 @@ The tool uses your cookies to authenticate with Backyard.ai and export your char
 <br>
 
 ### Q: How does the tool use my cookies?
-**A:** Currently, cookie retrieval only works with **Firefox** (because that’s the browser I use), though I plan to support more in the future.  
-
-You can check how it works in the file `cookies_extractor.js`.  
-It accesses your Firefox profile folder, reads the database containing your saved cookies, and then uses `main.js` to extract only the cookies for the **backyard.ai** domain — nothing else.  
+**A:** You can check how it works in the file `cookies_extractor.js`.  
+It accesses your browser profile folder, reads the database containing your saved cookies, and then uses `main.js` to extract only the cookies for the **backyard.ai** domain — nothing else.  
 
 The cookies are **not modified**, **not sent anywhere**, and are only used for authenticated requests to the Backyard.ai website.  
 <br>

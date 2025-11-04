@@ -39,80 +39,114 @@ function getCookiesForDomain(domain, browser = null) {
   }
 
   browser = browser.toLowerCase();
+  let cookies = null;
   if (browser.includes("firefox")) {
-    return firefoxCookiesProcess(domain);
+    cookies = firefoxCookiesProcess(domain);
   } else if (browser.includes("chrome")) {
-    return chromeCookiesProcess(domain);
+    cookies = chromeCookiesProcess(domain);
   } else if (browser.includes("edge")) {
-    return edgeCookiesProcess(domain);
+    cookies = chromeCookiesProcess(domain, getEdgeCookiesPath());
   } else if (browser.includes("brave")) {
-    return braveCookiesProcess(domain);
+    cookies = chromeCookiesProcess(domain, getBraveCookiesPath());
   } else if (browser.includes("safari")) {
-    return safariCookiesProcess(domain);
+    cookies = safariCookiesProcess(domain);
   } else if (browser.includes("opera")) {
-    return chromeCookiesProcess(domain);
+    cookies = chromeCookiesProcess(domain);
   } else {
     console.error(`Unsupported browser for cookie extraction: ${browser}`);
-    return null;
   }
-}
-
-function braveCookiesProcess(domain) {
-  // TODO
-  return [];
-}
-
-function edgeCookiesProcess(domain) {
-  // TODO
-  return [];
+  if (cookies) {
+    cookies = cookies.map(r => ({
+      name: r.name,
+      value: r.value,
+      host: r.host,
+      path: r.path,
+      expiry: r.expiry,
+      isSecure: Boolean(r.isSecure),
+      isHttpOnly: Boolean(r.isHttpOnly),
+    }));
+  }
+  return cookies;
 }
 
 function safariCookiesProcess(domain) {
-  // TODO
+  if (platform !== "darwin") return [];
+
+  const dbPath = path.join(os.homedir(), "Library", "Cookies", "Cookies.binarycookies");
+  if (!fs.existsSync(dbPath)) return [];
+
+  // Parsing Safari binary cookies is non-trivial; using a simple placeholder
+  console.error("Safari cookie extraction not fully implemented. Returning empty array.");
   return [];
 }
 
-function chromeCookiesProcess(domain) {
-  // TODO
-  return [];
+function chromeCookiesProcess(domain, overridePath = null) {
+  const dbPath = overridePath ? overridePath : getChromeCookiesPath();
+  if (!dbPath || !fs.existsSync(dbPath)) return [];
+
+  try {
+    const db = new Database(dbPath, { readonly: true });
+    const stmt = db.prepare(`
+      SELECT name, value, host_key AS host, path, expires_utc AS expiry, is_secure AS isSecure, is_httponly AS isHttpOnly
+      FROM cookies
+      WHERE host_key LIKE ?
+    `);
+    const rows = stmt.all(`%${domain}%`);
+    db.close();
+
+    return rows;
+  } catch (err) {
+    console.error("Error reading Chrome cookies:", err);
+    return [];
+  }
 }
 
 function firefoxCookiesProcess(domain) {
-  const profileDir = findFirefoxProfileDir();
-  const cookiesDbPath = path.join(profileDir, "cookies.sqlite");
-  if (!fs.existsSync(cookiesDbPath)) {
-    throw new Error(`cookies.sqlite not found in the profile: ${cookiesDbPath}`);
+  try {
+    const profileDir = findFirefoxProfileDir();
+    const cookiesDbPath = path.join(profileDir, "cookies.sqlite");
+    if (!fs.existsSync(cookiesDbPath)) {
+      throw new Error(`cookies.sqlite not found in the profile: ${cookiesDbPath}`);
+    }
+
+    const db = new Database(cookiesDbPath, { readonly: true, fileMustExist: true });
+    const stmt = db.prepare(`
+      SELECT name, value, host, path, expiry, isSecure, isHttpOnly
+      FROM moz_cookies
+      WHERE host LIKE ?
+    `);
+    const rows = stmt.all(`%${domain}%`);
+    db.close();
+
+    return rows;
+  } catch (err) {
+    console.error("Error reading Firefox cookies:", err);
+    return [];
   }
+}
 
-  const db = new Database(cookiesDbPath, { readonly: true, fileMustExist: true });
-  const stmt = db.prepare(`
-    SELECT name, value, host, path, expiry, isSecure, isHttpOnly
-    FROM moz_cookies
-    WHERE host LIKE ?
-  `);
-  const rows = stmt.all(`%${domain}%`);
-  db.close();
+function getChromeCookiesPath() {
+  if (platform === "win32") return path.join(process.env.LOCALAPPDATA, "Google", "Chrome", "User Data", "Default", "Cookies");
+  if (platform === "darwin") return path.join(os.homedir(), "Library", "Application Support", "Google", "Chrome", "Default", "Cookies");
+  return path.join(os.homedir(), ".config", "google-chrome", "Default", "Cookies");
+}
 
-  return rows.map(r => ({
-    name: r.name,
-    value: r.value,
-    host: r.host,
-    path: r.path,
-    expiry: r.expiry,
-    isSecure: Boolean(r.isSecure),
-    isHttpOnly: Boolean(r.isHttpOnly),
-  }));
+function getBraveCookiesPath() {
+  if (platform === "win32") return path.join(process.env.LOCALAPPDATA, "BraveSoftware", "Brave-Browser", "User Data", "Default", "Cookies");
+  if (platform === "darwin") return path.join(os.homedir(), "Library", "Application Support", "BraveSoftware", "Brave-Browser", "Default", "Cookies");
+  return path.join(os.homedir(), ".config", "BraveSoftware", "Brave-Browser", "Default", "Cookies");
+}
+
+function getEdgeCookiesPath() {
+  if (platform === "win32") return path.join(process.env.LOCALAPPDATA, "Microsoft", "Edge", "User Data", "Default", "Cookies");
+  if (platform === "darwin") return path.join(os.homedir(), "Library", "Application Support", "Microsoft Edge", "Default", "Cookies");
+  return path.join(os.homedir(), ".config", "microsoft-edge", "Default", "Cookies");
 }
 
 function getFirefoxProfilesBaseDir() {
-  if (platform === "win32") {
-    return path.join(process.env.APPDATA || "", "Mozilla", "Firefox", "Profiles");
-  } else if (platform === "darwin") {
-    return path.join(os.homedir(), "Library", "Application Support", "Firefox", "Profiles");
-  } else {
-    // linux / other unix
-    return path.join(os.homedir(), ".mozilla", "firefox");
-  }
+  if (platform === "win32") return path.join(process.env.APPDATA || "", "Mozilla", "Firefox", "Profiles");
+  if (platform === "darwin") return path.join(os.homedir(), "Library", "Application Support", "Firefox", "Profiles");
+  return path.join(os.homedir(), ".mozilla", "firefox");
 }
 
 function findFirefoxProfileDir() {
