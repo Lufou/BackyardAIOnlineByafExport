@@ -64,7 +64,7 @@ module.exports = { DEBUG };
     console.log("Fetching all characters...");
     let preloadCharacters = [];
     while (!all_fetched) {
-        const response = await requester.makeRequest(`/api/trpc/app.groupConfig.getAll?batch=1&input={"0":{"json":{"folderUrl":null,"cursor":${cursor},"direction":"forward"}}}`);
+        const response = await requester.makeRequest(`/api/trpc/app.groupConfig.getAll?batch=1&input={"0":{"json":{"folderUrl":null,"cursor":${cursor},"direction":"forward"}}}`, "fetch characters");
 
         if (!response) {
             return;
@@ -102,7 +102,7 @@ module.exports = { DEBUG };
     for (let char of preloadCharacters) {
         console.log(`\nProcessing: ${char.displayName} (${char.id})`);
 
-        const requestScenarios = await requester.makeRequest(`/api/trpc/app.groupConfig.getScenarios?batch=1&input={"0":{"json":{"groupConfigId":"${char.id}"}}}`);
+        const requestScenarios = await requester.makeRequest(`/api/trpc/app.groupConfig.getScenarios?batch=1&input={"0":{"json":{"groupConfigId":"${char.id}"}}}`, "fetch scenarios");
 
         if (!requestScenarios) {
             if (EXIT_ON_FAILURE) {
@@ -120,7 +120,7 @@ module.exports = { DEBUG };
 
             const scenarioId = scenario.id;
 
-            const requestChat = await requester.makeRequest(`/api/trpc/app.groupConfig.getByChatId?batch=1&input={"0":{"json":{"chatId":"${scenarioId}"}}}`);
+            const requestChat = await requester.makeRequest(`/api/trpc/app.groupConfig.getByChatId?batch=1&input={"0":{"json":{"chatId":"${scenarioId}"}}}`, "fetch chat info");
 
             if (!requestChat) {
                 if (EXIT_ON_FAILURE) {
@@ -163,7 +163,7 @@ module.exports = { DEBUG };
                 let cursor = 0;
                 let incr = 0;
                 while (!all_fetched) {
-                    const messagesRequest = await requester.makeRequest(`/api/trpc/app.chat.getMessages?batch=1&input={"0":{"json":{"chatId":"${scenarioId}","direction":"forward","cursor":${cursor}}}}`);
+                    const messagesRequest = await requester.makeRequest(`/api/trpc/app.chat.getMessages?batch=1&input={"0":{"json":{"chatId":"${scenarioId}","direction":"forward","cursor":${cursor}}}}`, "fetch messages");
 
                     if (!messagesRequest) {
                         if (EXIT_ON_FAILURE) {
