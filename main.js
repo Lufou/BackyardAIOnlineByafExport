@@ -201,6 +201,10 @@ module.exports = { DEBUG };
 
             const primaryChat = chatInfo.primaryChat;
 
+            if (chatInfo.isNSFW) {
+                char.isNSFW = true;
+            }
+            
             let scenarioToAdd = {
                 schemaVersion: 1,
                 title: primaryChat.name,
