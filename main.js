@@ -4,7 +4,7 @@ const yargs = require("yargs/yargs");
 const { hideBin } = require("yargs/helpers");
 const fs = require("fs");
 const path = require("path");
-const { createByaArchive } = require("byaf");
+const { createByaArchive, byafCharacterSchema, byafScenarioSchema } = require("byaf");
 const { getCookiesForDomain } = require("./cookies_extractor.js");
 const { debugLog } = require("./logging.js");
 const { downloadImageAsFile, replaceStringSpecial } = require("./utils.js");
@@ -238,19 +238,39 @@ module.exports = { DEBUG };
 
         debugLog(`character data: ${JSON.stringify(char)}`);
         debugLog(`scenario data: ${JSON.stringify(definitiveScenarios)}`);
-        const result = await createByaArchive(
-            {
-                outputPath,
-                character: char,
-                scenarios: definitiveScenarios,
-            },
-            {
-                validateInputs: false,
-            },
-        );
 
-        if (result.error) {
-            console.error("Error while creating archive:", result.error);
+        let error = null;
+        const characterResult = byafCharacterSchema.omit({ images: true }).safeParse(char);
+        if (!characterResult.success) {
+            error = `Invalid character data: ${characterResult.error.message}`;
+        }
+        else if (char.id === "") {
+            error = "Character ID is required";
+        }
+        else {
+            for (const scenario of definitiveScenarios) {
+                const scenarioResult = byafScenarioSchema.omit({ backgroundImage: true }).safeParse(scenario);
+                if (!scenarioResult.success) {
+                    error = `Invalid scenario data: ${scenarioResult.error.message}`;
+                }
+            }
+        }
+        
+        if (!error) {
+            error = await createByaArchive(
+                {
+                    outputPath,
+                    character: char,
+                    scenarios: definitiveScenarios,
+                },
+                {
+                    validateInputs: false,
+                },
+            ).error;
+        }
+        
+        if (error) {
+            console.error("Error while creating archive:", error);
         } else {
             console.log(`✅ ${outputPath} created`);
         }
