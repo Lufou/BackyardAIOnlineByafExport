@@ -37,6 +37,12 @@ const argv = yargs(hideBin(process.argv))
         description: 'Specify the browser to extract cookies from (chrome, firefox, edge, brave, safari, opera)',
         default: null,
     })
+    .option('messages', {
+        alias: 'm',
+        type: 'boolean',
+        description: 'Export chat messages',
+        default: false,
+    })
     .help()
     .argv;
 
@@ -150,6 +156,49 @@ module.exports = { DEBUG };
                 }
             }
 
+            let messages = [];
+
+            if (argv.messages) {
+                let all_fetched = false;
+                let cursor = 0;
+                let incr = 0;
+                while (!all_fetched) {
+                    const messagesRequest = await requester.makeRequest(`/api/trpc/app.chat.getMessages?batch=1&input={"0":{"json":{"chatId":"${scenarioId}","direction":"forward","cursor":${cursor}}}}`);
+
+                    if (!messagesRequest) {
+                        if (EXIT_ON_FAILURE) {
+                            return;
+                        }
+                    } else {
+                        if (incr === 0) {
+                            incr = messagesRequest.nextCursor;
+                        }
+                        for (const msg of messagesRequest.messages) {
+                            let toAdd = {};
+                            toAdd.type = msg.type;
+                            if (msg.type === "ai") {
+                                toAdd.outputs = [];
+                                toAdd.outputs.push({ createdAt: msg.activeTimestamp, updatedAt: msg.activeTimestamp, text: msg.text, activeTimestamp: msg.activeTimestamp });
+                            } else {
+                                toAdd.type = "human";
+                                toAdd.createdAt = msg.activeTimestamp;
+                                toAdd.updatedAt = msg.activeTimestamp;
+                                toAdd.text = msg.text;
+                            }
+                            messages.push(toAdd);
+                        }
+                    }
+
+                    if (messagesRequest.messages.length < incr) {
+                        all_fetched = true;
+                    } else {
+                        cursor = messagesRequest.nextCursor;
+                    }
+                }
+                messages = messages.reverse();
+                debugLog(`${messages.length} messages`);
+            }
+
             const primaryChat = chatInfo.primaryChat;
 
             let scenarioToAdd = {
@@ -175,7 +224,7 @@ module.exports = { DEBUG };
                 narrative: replaceStringSpecial(primaryChat.context, char.configId),
                 promptTemplate: primaryChat.promptTemplate,
                 grammar: primaryChat.grammar,
-                messages: [],
+                messages: messages,
                 backgroundImage: primaryChat.BackgroundImages[0] ? await downloadImageAsFile(primaryChat.BackgroundImages[0].imageUrl) : "",
             }
 
