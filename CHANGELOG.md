@@ -1,5 +1,25 @@
 # Changelog
 
+## 1.2.1 - 2025-11-08
+ 
+ _Just an internal changes version, mostly GitHub things._
+
+## 1.2.0 - 2025-11-07
+
+### Changed
+
+- Update the `TODO` list
+- Better error logs
+- Update the README
+
+### Added
+
+- Add the possibility to export chat messages (with the `--messages` or `-m` option)
+
+### Fixed
+
+- Fix the flag nsfw not properly being set in some cases
+
 ## 1.1.0 - 2025-11-04
 
 ### Changed
