@@ -79,6 +79,9 @@ function safariCookiesProcess(domain) {
 
   const dbPath = path.join(os.homedir(), "Library", "Cookies", "Cookies.binarycookies");
   if (!fs.existsSync(dbPath)) return [];
+  if (!domain) {
+    return;
+  }
 
   // Parsing Safari binary cookies is non-trivial; using a simple placeholder
   console.error("Safari cookie extraction not fully implemented. Returning empty array.");
