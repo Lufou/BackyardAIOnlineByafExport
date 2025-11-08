@@ -16,16 +16,20 @@ I currently don’t plan to support this feature, but you are still welcome to o
 # Requirements
 
 - You must have [NodeJS](https://nodejs.org/en) installed in your environment
-- Clone the repo using the command `git clone https://github.com/Lufou/BackyardAIOnlineByafExport.git`
-- Go to the folder of the repo you've just cloned (with the `cd` command)
-- Here, execute the command `npm install` to install required dependencies.
+- If you want to contribute: 
+    - Clone the repo using the command `git clone https://github.com/Lufou/BackyardAIOnlineByafExport.git`
+    - Go to the folder of the repo you've just cloned (with the `cd` command)
+    - Here, execute the command `npm install` to install required dependencies.
+- If you just want to use it:
+    - Grab the online-backyard-exporter file from the [latest release](https://github.com/Lufou/BackyardAIOnlineByafExport/releases/latest)
+    - Extract the archive where you want
 <br>
 
 # How to run it ?
 
 Very easy:
 - First, make sure to be logged in on Backyard.ai in your web browser
-- Then, just go to the folder you've cloned the repo into and execute the command `node .`
+- Then, just go to the folder you've cloned the repo or extracted the release archive into and execute the command `node . <options>`
 <br>
 
 # Options
