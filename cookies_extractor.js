@@ -3,7 +3,6 @@ const path = require("path");
 const os = require("os");
 const Database = require("better-sqlite3");
 const util = require("util");
-const { debug } = require("console");
 const exec = util.promisify(require("child_process").exec);
 
 const platform = os.platform();
