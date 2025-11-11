@@ -72,7 +72,7 @@ class DatabaseConnection {
         } catch (err) {
             if (this.directory) {
                 try {
-                    fs.unlink(this.directory);
+                    fs.rmSync(this.directory, { recursive: true, force: true });
                 } catch (err) {
                     warnLog(`Failed to remove temporary directory '${this.directory}': ${err.message}`);
                 }
@@ -87,7 +87,7 @@ class DatabaseConnection {
         }
         if (this.directory) {
             try {
-                fs.unlinkSync(this.directory);
+                fs.rmSync(this.directory, { recursive: true, force: true });
             } catch (err) {
                 warnLog(`Failed to remove temporary directory '${this.directory}': ${err.message}`);
             }
