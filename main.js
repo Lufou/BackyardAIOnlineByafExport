@@ -6,7 +6,7 @@ const fs = require("fs");
 const path = require("path");
 const { createByaArchive, byafCharacterSchema, byafScenarioSchema } = require("byaf");
 const { getCookiesForDomain } = require("./cookies_extractor.js");
-const { debugLog } = require("./logging.js");
+const { debugLog, infoLog, warnLog, errorLog } = require("./logging.js");
 const { downloadImageAsFile, replaceStringSpecial } = require("./utils.js");
 const { Requester } = require("./Requester.js");
 
@@ -61,7 +61,7 @@ module.exports = { DEBUG };
     let all_fetched = false;
     let cursor = 0;
     const requester = new Requester(BASE_URL, cookies);
-    console.log("Fetching all characters...");
+    infoLog("Fetching all characters...");
     let preloadCharacters = [];
     while (!all_fetched) {
         const response = await requester.makeRequest(`/api/trpc/app.groupConfig.getAll?batch=1&input={"0":{"json":{"folderUrl":null,"cursor":${cursor},"direction":"forward"}}}`, "fetch characters");
@@ -100,7 +100,7 @@ module.exports = { DEBUG };
     if (!fs.existsSync(OUTPUT_DIR)) fs.mkdirSync(OUTPUT_DIR);
     
     for (let char of preloadCharacters) {
-        console.log(`\nProcessing: ${char.displayName} (${char.id})`);
+        infoLog(`\nProcessing: ${char.displayName} (${char.id})`);
 
         const requestScenarios = await requester.makeRequest(`/api/trpc/app.groupConfig.getScenarios?batch=1&input={"0":{"json":{"groupConfigId":"${char.id}"}}}`, "fetch scenarios");
 
@@ -270,11 +270,11 @@ module.exports = { DEBUG };
         }
         
         if (error) {
-            console.error("Error while creating archive:", error);
+            errorLog("Error while creating archive:", error);
         } else {
-            console.log(`✅ ${outputPath} created`);
+            infoLog(`✅ ${outputPath} created`);
         }
     }
 
-    console.log("\n✅ Finished!");
+    infoLog("\n✅ Finished!");
 })();

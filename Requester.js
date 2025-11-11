@@ -1,3 +1,5 @@
+const { errorLog, infoLog } = require("./logging.js");
+
 class Requester {
     constructor(baseUrl, cookies) {
         this.baseUrl = baseUrl;
@@ -15,12 +17,12 @@ class Requester {
 
         if (!request.ok) {
             if (!message) {
-                console.error(`Failed to fetch URL: ${this.baseUrl + endpoint} - ${request.status} - ${request.statusText}`);
+                errorLog(`Failed to fetch URL: ${this.baseUrl + endpoint} - ${request.status} - ${request.statusText}`);
             } else {
-                console.error(`Failed to ${message} - ${request.status} - ${request.statusText}`);
+                errorLog(`Failed to ${message} - ${request.status} - ${request.statusText}`);
             }
             if (request.status === 401) {
-                console.log("Check that you are logged in on Backyard.ai with the specified browser.");
+                infoLog("Check that you are logged in on Backyard.ai with the specified browser.");
             }
             return null;
         }
@@ -29,9 +31,9 @@ class Requester {
 
         if (!data || !data[0] || !data[0].result || !data[0].result.data || !data[0].result.data.json) {
             if (!message) {
-                console.error("Invalid response structure when fetching URL: ", this.baseUrl + endpoint);
+                errorLog("Invalid response structure when fetching URL: ", this.baseUrl + endpoint);
             } else {
-                console.error(`Invalid response structure when trying to ${message}`);
+                errorLog(`Invalid response structure when trying to ${message}`);
             }
             return null;
         }
