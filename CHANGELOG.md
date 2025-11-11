@@ -1,5 +1,21 @@
 # Changelog
 
+## 1.3.0 - 2025-11-11
+
+### Changed
+
+- Improve logging
+- Better browsers support and change cookies processing
+- Update the README
+
+### Added
+
+- Add the possibility to directly pass cookies to the app with `--cookies` (or `-c`)
+
+### Fixed
+
+- Fix the "unable to delete directory" warning
+
 ## 1.2.1 - 2025-11-08
  
  _Just an internal changes version, mostly GitHub things._
