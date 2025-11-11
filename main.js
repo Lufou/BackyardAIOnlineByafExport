@@ -5,10 +5,13 @@ const { hideBin } = require("yargs/helpers");
 const fs = require("fs");
 const path = require("path");
 const { createByaArchive, byafCharacterSchema, byafScenarioSchema } = require("byaf");
-const { getCookiesForDomain } = require("./cookies_extractor.js");
+const { SUPPORTED_BROWSERS, loadCookies } = require("./cookies.js");
 const { debugLog, infoLog, warnLog, errorLog } = require("./logging.js");
-const { downloadImageAsFile, replaceStringSpecial } = require("./utils.js");
+const { downloadImageAsFile, replaceStringSpecial, parseBrowserString } = require("./utils.js");
 const { Requester } = require("./Requester.js");
+const os = require("os");
+const util = require("util");
+const exec = util.promisify(require("child_process").exec);
 
 const BASE_URL = "https://backyard.ai";
 
@@ -43,6 +46,12 @@ const argv = yargs(hideBin(process.argv))
         description: 'Export chat messages',
         default: false,
     })
+    .option('cookies', {
+        alias: 'c',
+        type: 'string',
+        description: 'Provide cookies as a string',
+        default: null,
+    })
     .help()
     .argv;
 
@@ -53,7 +62,49 @@ const EXIT_ON_FAILURE = argv['exit-on-failure'];
 module.exports = { DEBUG };
 
 (async () => {
-    const cookies = await getCookiesForDomain("backyard.ai", argv.browser);
+    let cookies = argv.cookies;
+    if (!argv.cookies) {
+        let browser = argv.browser
+        if (!browser) {
+            try {
+                if (os.platform() === "win32") {
+                    const { stdout } = await exec(
+                        'reg query "HKEY_CURRENT_USER\\Software\\Microsoft\\Windows\\Shell\\Associations\\UrlAssociations\\http\\UserChoice" /v ProgId'
+                    );
+
+                    const match = stdout.match(/ProgId\s+REG_SZ\s+(.+)/);
+                    if (match) browser = match[1];
+                } else if (os.platform() === "darwin") {
+                    const { stdout } = await exec(
+                        'defaults read com.apple.LaunchServices/com.apple.launchservices.secure LSHandlers -array'
+                    );
+                    browser = stdout;
+                } else {
+                    const { stdout } = await exec('xdg-settings get default-web-browser');
+                    browser = stdout;
+                }
+            } catch (err) {
+                errorLog(err);
+            }
+
+            browser = browser.toLowerCase();
+            for (const supported_browser of SUPPORTED_BROWSERS) {
+                if (browser.includes(supported_browser)) {
+                    browser = supported_browser;
+                    break;
+                }
+            }
+        }
+
+        if (!browser) {
+            warnLog("Could not determine default browser. Please specify the browser manually.");
+            return null;
+        }
+
+        const [browserName, profile, keyring, container] = parseBrowserString(browser);
+        debugLog(`Using browser: ${browserName}`);
+        cookies = await loadCookies([browserName, profile, keyring, container, "backyard.ai"]);
+    }
     if (!cookies) {
         return;
     }

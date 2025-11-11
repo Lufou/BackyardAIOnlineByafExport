@@ -79,7 +79,7 @@ jobs:
           echo "Creating $FILE_NAME"
           tar -czf "dist/$FILE_NAME" \
             main.js package.json package-lock.json \
-            cookies_extractor.js logging.js utils.js Requester.js \
+            cookies.js logging.js utils.js Requester.js \
             node_modules/ LICENSE README.md
 
       - name: Upload artifact

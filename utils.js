@@ -27,5 +27,23 @@ function replaceStringSpecial(input, configId) {
     return replaced;
 }
 
-module.exports = { downloadImageAsFile, replaceStringSpecial };
+function parseBrowserString(str) {
+  const regex = /^([^:+]+)(?:\+([^:]+))?(?::([^:]+))?(?:::([^:]+))?$/;
+  const match = str.match(regex);
+
+  if (!match) {
+    throw new Error(`Invalid format: ${str}`);
+  }
+
+  const [, browser, keyring, profile, container] = match;
+
+  return [
+    browser,
+    keyring || null,
+    profile || null,
+    container || null
+  ];
+}
+
+module.exports = { downloadImageAsFile, replaceStringSpecial, parseBrowserString };
 
