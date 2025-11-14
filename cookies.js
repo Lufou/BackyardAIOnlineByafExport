@@ -205,99 +205,93 @@ async function loadCookiesChromium(browser_name, profile=null, keyring=null, dom
         condition = ""
         parameters = []
     }
-    return new Promise(async (resolve, reject) => {
-        let db;
-        const dbc = new DatabaseConnection(path);
-        try {
-            db = await dbc.connect();
 
-            let meta_version = 0;
-            const stmt = db.prepare("SELECT value FROM meta WHERE key = 'version'");
+    let db;
+    const dbc = new DatabaseConnection(path);
+    try {
+        db = await dbc.connect();
 
-            const row = stmt.get();
+        let meta_version = 0;
+        const stmt = db.prepare("SELECT value FROM meta WHERE key = 'version'");
 
-            if (row && row.value) {
-                meta_version = parseInt(row.value);
-            } else {
-                warnLog("Failed to get cookie database meta version (no rows returned)");
-            }
+        const row = stmt.get();
 
-            try {
-                const query = `
-                    SELECT host_key, name, value, encrypted_value, path, expires_utc, is_secure, is_httponly FROM cookies ${condition}`;
-                const rows = db.prepare(query).all(parameters);
-
-                processResults(rows, meta_version, config, keyring, resolve, reject);
-            } catch (err) {
-                const fallbackQuery = `
-                    SELECT host_key, name, value, encrypted_value, path, expires_utc, secure 
-                    FROM cookies ${condition}
-                `;
-                try {
-                    const rows = db.prepare(fallbackQuery).all(parameters);
-                    processResults(rows, meta_version, config, keyring, resolve, reject);
-                } catch (fallbackErr) {
-                    return reject(fallbackErr);
-                }
-            }
-
-            function processResults(rows, meta_version, config, keyring, resolve, reject) {
-                let failed_cookies = 0;
-                let unencrypted_cookies = 0;
-                const decryptor = _chromium_cookie_decryptor(config.directory, config.keyring, keyring, meta_version);
-                const cookies = [];
-
-                rows.forEach(row => {
-                    let { host_key, name, value, encrypted_value, path, expires_utc, is_secure, is_httponly } = row;
-                    if (!value && encrypted_value) {
-                        value = decryptor.decrypt(encrypted_value);
-                        if (value === null) {
-                            failed_cookies++;
-                            return;
-                        }
-                    } else {
-                        value = value ? value.toString() : "";
-                        unencrypted_cookies++;
-                    }
-
-                    let expires = null;
-                    if (expires_utc) {
-                        expires = Math.floor(expires_utc / 1000000) - 11644473600;
-                    }
-
-                    host_key = host_key ? host_key.toString() : "";
-                    path = path ? path.toString() : "";
-                    name = name ? name.toString() : "";
-                    is_secure = is_secure !== undefined ? is_secure : false;
-
-                    cookies.push({
-                        name: name,
-                        value: value,
-                        host: host_key,
-                        path: path,
-                        expiry: expires,
-                        isSecure: Boolean(is_secure),
-                        isHttpOnly: Boolean(is_httponly),
-                    });
-                });
-
-                const failed_message = failed_cookies > 0 ? ` (${failed_cookies} could not be decrypted)` : "";
-                infoLog(`Extracted ${cookies.length} cookies from ${config.browser_name.capitalize()}${failed_message}`);
-                const counts = decryptor.cookie_counts;
-                counts.unencrypted = unencrypted_cookies;
-                debugLog("version breakdown: ", counts);
-
-                resolve(cookies);
-            }
-        } catch (err) {
-            reject(err);
-        } finally {
-            // Fermer la connexion dans tous les cas
-            if (dbc) {
-                dbc.close();
-            }
+        if (row && row.value) {
+            meta_version = parseInt(row.value);
+        } else {
+            warnLog("Failed to get cookie database meta version (no rows returned)");
         }
-    });
+
+        const baseQuery = `SELECT host_key, name, value, encrypted_value, path, expires_utc, is_secure, is_httponly FROM cookies ${condition}`;
+        let rows;
+
+        try {
+            rows = db.prepare(baseQuery).all(parameters);
+        } catch {
+            const fallbackQuery = `
+                SELECT host_key, name, value, encrypted_value, path, expires_utc, secure 
+                FROM cookies ${condition}
+            `;
+            rows = db.prepare(fallbackQuery).all(parameters);
+        }
+
+        return processResults(rows, meta_version, config, keyring);
+
+    } finally {
+        // Fermer la connexion dans tous les cas
+        if (dbc) {
+            dbc.close();
+        }
+    }
+
+    function processResults(rows, meta_version, config, keyring) {
+        let failed_cookies = 0;
+        let unencrypted_cookies = 0;
+        const decryptor = _chromium_cookie_decryptor(config.directory, config.keyring, keyring, meta_version);
+        const cookies = [];
+
+        for (const row of rows) {
+            let { host_key, name, value, encrypted_value, path, expires_utc, is_secure, is_httponly } = row;
+            if (!value && encrypted_value) {
+                value = decryptor.decrypt(encrypted_value);
+                if (value === null) {
+                    failed_cookies++;
+                    return;
+                }
+            } else {
+                value = value ? value.toString() : "";
+                unencrypted_cookies++;
+            }
+
+            let expires = null;
+            if (expires_utc) {
+                expires = Math.floor(expires_utc / 1000000) - 11644473600;
+            }
+
+            host_key = host_key ? host_key.toString() : "";
+            path = path ? path.toString() : "";
+            name = name ? name.toString() : "";
+            is_secure = is_secure !== undefined ? is_secure : false;
+
+            cookies.push({
+                name: name,
+                value: value,
+                host: host_key,
+                path: path,
+                expiry: expires,
+                isSecure: Boolean(is_secure),
+                isHttpOnly: Boolean(is_httponly),
+            });
+        }
+
+        const failed_message = failed_cookies > 0 ? ` (${failed_cookies} could not be decrypted)` : "";
+        infoLog(`Extracted ${cookies.length} cookies from ${config.browser_name.capitalize()}${failed_message}`);
+        const counts = decryptor.cookie_counts;
+        counts.unencrypted = unencrypted_cookies;
+        debugLog("version breakdown: ", counts);
+
+        return cookies;
+    }
 }
 
 async function _firefox_cookies_database(browserName, profile = null, container = null) {
@@ -395,7 +389,7 @@ function _safari_cookies_database() {
         fs.readSync(fd, buffer, 0, buffer.length, null);
         fs.closeSync(fd);
         return buffer;
-    } catch (err) {
+    } catch {
         debugLog("Trying secondary cookie location")
         const path = expanduser("~/Library/Containers/com.apple.Safari/Data/Library/Cookies/Cookies.binarycookies")
         const fd = fs.openSync(path, 'r');
@@ -496,7 +490,7 @@ function _webkit_parse_cookies_record(data, cookies, host=null) {
 
         p.skip_to(value_offset)
         value = p.read_cstring()
-    } catch (err) {
+    } catch {
         warnLog("Failed to parse WebKit cookie")
         return record_size
     }
@@ -778,7 +772,7 @@ function _get_kwallet_password(browser_keyring_name) {
     debugLog("Using kwallet-query to obtain password from kwallet")
     try {
         whichSync("kwallet-query");
-    } catch (err) {
+    } catch {
         errorLog(
             "kwallet-query command not found. KWallet and kwallet-query "
             + "must be installed to read from KWallet. kwallet-query should be "
@@ -885,7 +879,7 @@ function _get_windows_v10_key(browser_root) {
     let base64_key;
     try {
         base64_key = data["os_crypt"]["encrypted_key"];
-    } catch (err) {
+    } catch {
         errorLog("Unable to find encrypted key in Local State");
         return null;
     }
@@ -1036,7 +1030,7 @@ function _decrypt_aes_cbc(ciphertext, key, offset=0, initialization_vector=Buffe
             plaintext = plaintext.subarray(offset);
         }
         return plaintext.toString('utf8');
-    } catch (err) {
+    } catch {
         return null
     }
 }
