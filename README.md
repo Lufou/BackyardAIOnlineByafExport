@@ -15,7 +15,7 @@ I currently don’t plan to support this feature, but you are still welcome to o
 
 # Requirements
 
-- You must have [NodeJS](https://nodejs.org/en) installed in your environment
+- You must have [NodeJS](https://nodejs.org/en) installed in your environment (version >= 20.x but < 25.x)
 - If you want to contribute: 
     - Clone the repo using the command `git clone https://github.com/Lufou/BackyardAIOnlineByafExport.git`
     - Go to the folder of the repo you've just cloned (with the `cd` command)
@@ -41,6 +41,7 @@ Very easy:
 | `--exit-on-failure` | `-e`              | `boolean` | `true`     | Exit the program if something fails                                                                                       |
 | `--browser`         | `-b`              | `string`  | `null`     | Specify the web browser to extract the session cookies from. Format: `BROWSER[+KEYRING][:PROFILE][::CONTAINER]`. Name of the browser to load cookies from, optional keyring name prefixed with '+', optional profile prefixed with ':', and optional container prefixed with '::' ('none' for no container (default), 'all' for all containers) |
 | `--messages`        | `-m`              | `boolean` | `false`    | Export chat messages                                                                                                   |
+| `--cookies`         | `-c`              | `string`  | `null`     | Specify cookies string                                                                                                 |
 
 
 ## FAQ
