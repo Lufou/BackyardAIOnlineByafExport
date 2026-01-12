@@ -37,11 +37,14 @@ const KEYRING_BASICTEXT = "basictext"
 const SUPPORTED_KEYRINGS = ["kwallet", "gnomekeyring", "basictext"];
 
 
-const expanduser = text => text.replace(
-    /^~([a-z]+|\/)/,
-    (_, $1) => $1 === '/' ?
-        os.homedir() : `${os.dirname(os.homedir())}/${$1}`
-);
+function expandUser(p) {
+  if (!p) return p;
+  if (p === '~') return os.homedir();
+  if (p.startsWith('~/')) {
+    return path.join(os.homedir(), p.slice(2));
+  }
+  return p;
+}
 
 class DatabaseConnection {
     constructor(dbPath) {
@@ -360,14 +363,14 @@ function _firefox_browser_directory(browser_name) {
             "zen"      : join(appdata, "zen", "Profiles"),
         }[browser_name]
     } else if (platform == "darwin") {
-        const appdata = expanduser("~/Library/Application Support")
+        const appdata = expandUser("~/Library/Application Support")
         return {
             "firefox"  : join(appdata, "Firefox", "Profiles"),
             "librewolf": join(appdata, "librewolf", "Profiles"),
             "zen"      : join(appdata, "zen", "Profiles"),
         }[browser_name]
     } else {
-        const home = expanduser("~")
+        const home = expandUser("~")
         return {
             "firefox"  : join(home, ".mozilla", "firefox"),
             "librewolf": join(home, ".librewolf"),
@@ -382,7 +385,7 @@ function _firefox_browser_directory(browser_name) {
 
 function _safari_cookies_database() {
     try {
-        const path = expanduser("~/Library/Cookies/Cookies.binarycookies")
+        const path = expandUser("~/Library/Cookies/Cookies.binarycookies")
         const fd = fs.openSync(path, 'r');
         const buffer = Buffer.alloc(1024);
 
@@ -391,7 +394,7 @@ function _safari_cookies_database() {
         return buffer;
     } catch {
         debugLog("Trying secondary cookie location")
-        const path = expanduser("~/Library/Containers/com.apple.Safari/Data/Library/Cookies/Cookies.binarycookies")
+        const path = expandUser("~/Library/Containers/com.apple.Safari/Data/Library/Cookies/Cookies.binarycookies")
         const fd = fs.openSync(path, 'r');
         const buffer = Buffer.alloc(1024);
 
@@ -402,7 +405,7 @@ function _safari_cookies_database() {
 }
 
 function _orion_cookies_database() {
-    const path = expanduser("~/Library/HTTPStorages/com.kagi.kagimacOS.binarycookies")
+    const path = expandUser("~/Library/HTTPStorages/com.kagi.kagimacOS.binarycookies")
     const fd = fs.openSync(path, 'r');
     const buffer = Buffer.alloc(1024);
 
@@ -558,7 +561,7 @@ function _chromium_browser_settings(browser_name) {
         }[browser_name]
     }
     else if(platform == "darwin") {
-        const appdata = expanduser("~/Library/Application Support")
+        const appdata = expandUser("~/Library/Application Support")
         browser_dir = {
             "brave"   : join(appdata, "BraveSoftware/Brave-Browser"),
             "chrome"  : join(appdata, "Google/Chrome"),
@@ -569,7 +572,7 @@ function _chromium_browser_settings(browser_name) {
             "vivaldi" : join(appdata, "Vivaldi"),
         }[browser_name]
     } else {
-        const config = (process.env.get("XDG_CONFIG_HOME") || expanduser("~/.config"))
+        const config = (process.env.get("XDG_CONFIG_HOME") || expandUser("~/.config"))
         browser_dir = {
             "brave"   : join(config, "BraveSoftware/Brave-Browser"),
             "chrome"  : join(config, "google-chrome"),
