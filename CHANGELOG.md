@@ -1,5 +1,11 @@
 # Changelog
 
+## 1.3.1 - 2025-01-12
+
+### Fixed
+
+- Fix '~' not being expanded properly on Linux systems
+
 ## 1.3.0 - 2025-11-11
 
 ### Changed
