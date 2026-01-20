@@ -1,5 +1,11 @@
 # Changelog
 
+## 1.4.0 - 2026-01-20
+
+### Added
+
+- It now exports also characters from folders and subfolders
+
 ## 1.3.1 - 2026-01-12
 
 ### Fixed
