@@ -61,6 +61,72 @@ const EXIT_ON_FAILURE = argv['exit-on-failure'];
 
 module.exports = { DEBUG };
 
+async function crawlFolder(requester, folderUrl = null) {
+    infoLog(
+        `Fetching characters for folder: ${folderUrl ? folderUrl.join("/") : "root"}`
+    );
+
+    let all_fetched = false;
+    let cursor = 0;
+
+    let preloadCharacters = [];
+
+    while (!all_fetched) {
+        const response = await requester.makeRequest(
+            `/api/trpc/app.groupConfig.getAll?batch=1&input=${JSON.stringify({
+                "0": {
+                    json: {
+                        folderUrl,
+                        cursor,
+                        direction: "forward"
+                    }
+                }
+            })}`,
+            "fetch characters"
+        );
+
+        if (!response) return;
+
+        const fetchedCharacters = response.groupConfigCards ?? [];
+
+        for (const char of fetchedCharacters) {
+            if (char.CharConfigs.length > 1) {
+                for (const config of char.CharConfigs) {
+                    preloadCharacters.push({
+                        displayName: config.displayName,
+                        configId: config.charConfigId,
+                        id: char.id
+                    });
+                }
+            } else if (char.CharConfigs[0]) {
+                preloadCharacters.push({
+                    displayName: char.CharConfigs[0].displayName,
+                    configId: char.CharConfigs[0].charConfigId,
+                    id: char.id
+                });
+            }
+        }
+
+        if (cursor === 0 && response.childFolders?.length) {
+            for (const child of response.childFolders) {
+                const childResults = await crawlFolder(
+                    requester,
+                    [...(folderUrl ?? []), child.url]
+                );
+                preloadCharacters.push(...childResults);
+            }
+        }
+
+        if (fetchedCharacters.length < 50) {
+            all_fetched = true;
+        } else {
+            cursor += 50;
+        }
+    }
+
+    return preloadCharacters;
+}
+
 (async () => {
     let cookies = argv.cookies;
     if (!argv.cookies) {
@@ -109,43 +175,9 @@ module.exports = { DEBUG };
         return;
     }
     debugLog(`Cookies found: ${cookies.length}`);
-    let all_fetched = false;
-    let cursor = 0;
     const requester = new Requester(BASE_URL, cookies);
     infoLog("Fetching all characters...");
-    let preloadCharacters = [];
-    while (!all_fetched) {
-        const response = await requester.makeRequest(`/api/trpc/app.groupConfig.getAll?batch=1&input={"0":{"json":{"folderUrl":null,"cursor":${cursor},"direction":"forward"}}}`, "fetch characters");
-
-        if (!response) {
-            return;
-        }
-        
-        const fetchedCharacters = response.groupConfigCards;
-        for (const char of fetchedCharacters) {
-            if (char.CharConfigs.length > 1) {
-                for (const config of char.CharConfigs) {
-                    preloadCharacters.push({
-                        displayName: config.displayName,
-                        configId: config.charConfigId,
-                        id: char.id
-                    });
-                }
-            } else {
-                preloadCharacters.push({
-                    displayName: char.CharConfigs[0].displayName,
-                    configId: char.CharConfigs[0].charConfigId,
-                    id: char.id
-                });
-            }
-        }
-        if (fetchedCharacters.length < 50) {
-            all_fetched = true;
-        } else {
-            cursor += 50;
-        }
-    }
-
+    let preloadCharacters = await crawlFolder(requester, null);
     debugLog(`${preloadCharacters.length} characters found.`);
 
     if (!fs.existsSync(OUTPUT_DIR)) fs.mkdirSync(OUTPUT_DIR);
