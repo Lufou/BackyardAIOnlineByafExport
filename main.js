@@ -85,7 +85,7 @@ async function crawlFolder(requester, folderUrl = null) {
             "fetch characters"
         );
 
-        if (!response) return;
+        if (!response) return preloadCharacters;
 
         const fetchedCharacters = response.groupConfigCards ?? [];
 
