@@ -45,5 +45,24 @@ function parseBrowserString(str) {
   ];
 }
 
-module.exports = { downloadImageAsFile, replaceStringSpecial, parseBrowserString };
+function buildCookiesFromString(cookiesString) {
+  let cookies = [];
+
+  for (let cookie of cookiesString.split(';')) {
+    const cookieParts = cookie.split('=');
+    let cookieName = cookieParts[0];
+    let cookieValue = cookieParts[1];
+    if (cookieName.startsWith(' ')) {
+      cookieName = cookieName.replace(' ', '');
+    }
+    cookies.push({
+      name: cookieName,
+      value: cookieValue
+    })
+  }
+
+  return cookies;
+}
+
+module.exports = { downloadImageAsFile, replaceStringSpecial, parseBrowserString, buildCookiesFromString };
 

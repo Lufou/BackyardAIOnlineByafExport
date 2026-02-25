@@ -7,7 +7,7 @@ const path = require("path");
 const { createByaArchive, byafCharacterSchema, byafScenarioSchema } = require("byaf");
 const { SUPPORTED_BROWSERS, loadCookies } = require("./cookies.js");
 const { debugLog, infoLog, warnLog, errorLog } = require("./logging.js");
-const { downloadImageAsFile, replaceStringSpecial, parseBrowserString } = require("./utils.js");
+const { downloadImageAsFile, replaceStringSpecial, parseBrowserString, buildCookiesFromString } = require("./utils.js");
 const { Requester } = require("./Requester.js");
 const os = require("os");
 const util = require("util");
@@ -170,6 +170,10 @@ async function crawlFolder(requester, folderUrl = null) {
         const [browserName, profile, keyring, container] = parseBrowserString(browser);
         debugLog(`Using browser: ${browserName}`);
         cookies = await loadCookies([browserName, profile, keyring, container, "backyard.ai"]);
+    }
+    else
+    {
+        cookies = buildCookiesFromString(cookies);
     }
     if (!cookies) {
         return;
