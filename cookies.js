@@ -8,6 +8,7 @@ const { debugLog, infoLog, warnLog, errorLog } = require('./logging.js');
 const { execSync } = require('child_process');
 const { whichSync } = require('which');
 const Database = require('better-sqlite3');
+const { pathToFileURL } = require('url');
 
 const SUPPORTED_BROWSERS_CHROMIUM = new Set([
     "brave", "chrome", "chromium", "edge", "opera", "thorium", "vivaldi"
@@ -55,11 +56,7 @@ class DatabaseConnection {
 
     async connect() {
         try {
-            let uriPath = this.path.replace(/\?/g, '%3f').replace(/#/g, '%23');
-            if (os.platform() === 'win32') {
-                uriPath = '/' + path.resolve(uriPath);
-            }
-            const uri = `file:${uriPath}?mode=ro&immutable=1`;
+            const uri = `${pathToFileURL(this.path).href}?mode=ro&immutable=1`;
             this.database = new Database(uri, { readonly: true });
             return this.database;
         } catch (exc) {
