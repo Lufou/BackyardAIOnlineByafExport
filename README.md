@@ -41,7 +41,7 @@ Very easy:
 | `--exit-on-failure` | `-e`              | `boolean` | `true`     | Exit the program if something fails                                                                                       |
 | `--browser`         | `-b`              | `string`  | `null`     | Specify the web browser to extract the session cookies from. Format: `BROWSER[+KEYRING][:PROFILE][::CONTAINER]`. Name of the browser to load cookies from, optional keyring name prefixed with '+', optional profile prefixed with ':', and optional container prefixed with '::' ('none' for no container (default), 'all' for all containers) |
 | `--messages`        | `-m`              | `boolean` | `false`    | Export chat messages                                                                                                   |
-| `--cookies`         | `-c`              | `string`  | `null`     | Specify cookies string                                                                                                 |
+| `--cookies`         | `-c`              | `string`  | `null`     | Specify cookies string (needs to be at the format `"cookie1_name=cookie1_value; cookie2_name=cookie2_value; etc..."`). You need to specify the cookies __Host-next-auth.csrf-token, __Secure-next-auth.callback-url, __Secure-next-auth.session-token, x-build-type, x-client-id, x-device-id                                                            |
 
 
 ## FAQ
