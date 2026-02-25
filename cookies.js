@@ -304,12 +304,17 @@ async function _firefox_cookies_database(browserName, profile = null, container 
     } else if (_is_path(profile)) {
         searchRoot = profile;
     } else {
-        searchRoot = path.join(_firefox_browser_directory(browserName), profile);
+        searchRoot = path.join(_firefox_browser_directory(browserName));
+        if (typeof searchRoot === 'string') {
+            searchRoot = path.join(searchRoot, profile);
+        } else {
+            searchRoot = searchRoot.map(dir => path.join(dir, profile));
+        }
     }
 
     const cookiePath = await _find_most_recently_used_file(searchRoot, "cookies.sqlite");
     if (!cookiePath) {
-        throw new Error(`Unable to find ${browserName.charAt(0).toUpperCase() + browserName.slice(1)} cookies database in ${searchRoot}`);
+        throw new Error(`Unable to find ${browserName.charAt(0).toUpperCase() + browserName.slice(1)} cookies database`);
     }
 
     debugLog(`Extracting cookies from ${cookiePath}`);
@@ -373,11 +378,26 @@ function _firefox_browser_directory(browser_name) {
         }[browser_name]
     } else {
         const home = expandUser("~")
-        return {
-            "firefox"  : join(home, ".mozilla", "firefox"),
-            "librewolf": join(home, ".librewolf"),
-            "zen"      : join(home, ".zen"),
-        }[browser_name]
+        if (browser_name === "firefox") {
+            const config = (process.env.get("XDG_CONFIG_HOME") || expandUser("~/.config"))
+
+            return [
+                // versions >= 147
+                path.join(config, "mozilla/firefox"),
+
+                // versions <= 146
+                path.join(home, ".mozilla/firefox"),
+
+                // Flatpak
+                path.join(home, ".var/app/org.mozilla.firefox/config/mozilla/firefox"),
+                path.join(home, ".var/app/org.mozilla.firefox/.mozilla/firefox"),
+
+                // Snap
+                path.join(home, "snap/firefox/common/.mozilla/firefox"),
+            ];
+        }
+
+        return `${home}/.${browser_name}`;
     }
 }
 
@@ -1063,25 +1083,35 @@ function _decrypt_aes_gcm(ciphertext, key, nonce, authentication_tag, offset = 0
     }
 }
 
-function _find_most_recently_used_file(root, filename) {
-    const first_choice = path.join(root, filename);
-    if (fs.existsSync(first_choice)) {
-        return first_choice;
+function _find_most_recently_used_file(roots, filename) {
+    if (typeof roots === 'string') {
+        roots = [roots];
+    }
+
+    for (let root in roots) {
+        let first_choice = path.join(root, filename);
+        if (fs.existsSync(first_choice)) {
+            return first_choice;
+        }
     }
 
     let paths = [];
-    function walk(curr_root) {
-        const entries = fs.readdirSync(curr_root, { withFileTypes: true });
+    function walk(dir) {
+        const entries = fs.readdirSync(dir, { withFileTypes: true });
+
         for (const entry of entries) {
-            const fullPath = path.join(curr_root, entry.name);
+            const fullPath = path.join(dir, entry.name);
+
             if (entry.isDirectory()) {
                 walk(fullPath);
-            } else if (entry.isFile() && entry.name === filename) {
+            } else if (entry.name === filename) {
                 paths.push(fullPath);
             }
         }
     }
-    walk(root);
+    for (const root of roots) {
+        walk(root);
+    }
 
     if (paths.length === 0) {
         return null;
