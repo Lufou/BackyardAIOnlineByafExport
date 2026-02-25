@@ -129,7 +129,7 @@ async function crawlFolder(requester, folderUrl = null) {
 
 (async () => {
     let cookies = argv.cookies;
-    if (!argv.cookies) {
+    if (!cookies) {
         let browser = argv.browser
         if (!browser) {
             try {
