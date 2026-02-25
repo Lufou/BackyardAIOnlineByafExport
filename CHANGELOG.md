@@ -1,5 +1,15 @@
 # Changelog
 
+## 1.4.1 - 2026-02-25
+
+### Added
+
+- Support Floorp browser
+
+### Fixed
+
+- The `--cookies` option should work correctly now
+
 ## 1.4.0 - 2026-01-20
 
 ### Added
