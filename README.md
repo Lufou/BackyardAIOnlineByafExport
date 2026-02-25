@@ -52,7 +52,7 @@ The tool uses your cookies to authenticate with Backyard.ai and export your char
 <br>
 
 ### Q: What are the supported browsers for cookies auto using?
-**A:** Supported browsers are: Brave, Chrome, Chromium, Edge, Opera, Thorium, Vivaldi, Firefox, Librewolf, Zen, Safari, Orion.<br>
+**A:** Supported browsers are: Brave, Chrome, Chromium, Edge, Opera, Thorium, Vivaldi, Firefox, Librewolf, Zen, Safari, Orion, Floorp.<br>
 Since mid-2024, Chromium based browsers cookies on Windows, sometimes can't be decrypted by external programs. You will need to use the `--cookies` to set the cookies if you are not connected on Backyard.ai on another non-Chromium based browser.
 
 ### Q: How does the tool use my cookies?

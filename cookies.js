@@ -13,7 +13,7 @@ const SUPPORTED_BROWSERS_CHROMIUM = new Set([
     "brave", "chrome", "chromium", "edge", "opera", "thorium", "vivaldi"
 ]);
 const SUPPORTED_BROWSERS_FIREFOX = new Set([
-    "firefox", "librewolf", "zen"
+    "firefox", "librewolf", "zen", "floorp"
 ]);
 const SUPPORTED_BROWSERS_WEBKIT = new Set([
     "safari", "orion"
@@ -361,6 +361,7 @@ function _firefox_browser_directory(browser_name) {
             "firefox"  : join(appdata, "Mozilla", "Firefox", "Profiles"),
             "librewolf": join(appdata, "librewolf", "Profiles"),
             "zen"      : join(appdata, "zen", "Profiles"),
+            "floorp"   : join(appdata, "Floorp", "Profiles")
         }[browser_name]
     } else if (platform == "darwin") {
         const appdata = expandUser("~/Library/Application Support")
@@ -368,6 +369,7 @@ function _firefox_browser_directory(browser_name) {
             "firefox"  : join(appdata, "Firefox", "Profiles"),
             "librewolf": join(appdata, "librewolf", "Profiles"),
             "zen"      : join(appdata, "zen", "Profiles"),
+            "floorp"   : join(appdata, "Floorp", "Profiles")
         }[browser_name]
     } else {
         const home = expandUser("~")
